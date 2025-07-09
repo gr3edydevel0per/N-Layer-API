@@ -9,5 +9,5 @@ logs/
 # Environment variables
 .env
 
-package.json
+
 package-lock.json

@@ -1,5 +1,6 @@
 const { DataTypes } = require('sequelize');
-
+const { add } = require('winston');
+const GadgetUtils = require('../utils/gadgetUtils')
 module.exports = (sequelize) => {
   const Gadget = sequelize.define('Gadget', {
     id: {
@@ -24,7 +25,7 @@ module.exports = (sequelize) => {
     }
   }, {
     tableName: 'gadgets',
-    timestamps: true, 
+    timestamps: true,
     hooks: {
       beforeUpdate: (gadget) => {
         if (gadget.changed('status') && gadget.status === 'Decommissioned') {
@@ -32,7 +33,18 @@ module.exports = (sequelize) => {
         }
       }
     }
-  });
+  }
+  );
+
+
+
+Gadget.prototype.toJSON = function () {
+  const values = this.get();
+  const name = values.name;
+  const probability = GadgetUtils.generateSuccessProbabilities();
+
+  return `${name} - ${probability}% success probability`;
+};
 
   return Gadget;
 };

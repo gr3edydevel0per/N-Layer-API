@@ -23,15 +23,15 @@ class GadgetRepository {
     }
   }
 
-  async findByName(gadgetName) {
-    try {
-      const gadget = await db.Gadget.findOne({ where: { email } });
-      return gadget;
-    } catch (error) {
-      logger.error(`Error finding gadget by email ${email}:`, error);
-      throw error;
-    }
+async findByName(gadgetName) {
+  try {
+    const gadget = await db.Gadget.findOne({ where: { name: gadgetName } });
+    return gadget;
+  } catch (error) {
+    logger.error(`Error finding gadget by name ${gadgetName}:`, error);
+    throw error;
   }
+}
 
   async update(id, updateData) {
     try {

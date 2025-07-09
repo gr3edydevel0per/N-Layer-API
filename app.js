@@ -5,7 +5,8 @@ const config = require("./config/configHandler");
 
 const app = express();
 
-const userRoutes = require('./routes/userRoutes')
+const userRoutes = require('./routes/userRoutes');
+const gadgetRoutes = require('./routes/gadgetRoutes');
 const errorHandler = require('./middleware/errorHandler')
 // set the view engine to ejs
 app.set("view engine", "ejs");
@@ -37,16 +38,8 @@ app.get("/register", (req, res) => {
 });
 
 
-app.use('/api/user', userRoutes);
-
-// 404 handler - catches all unmatched routes
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    message: 'Route not found'
-  });
-});
-
+app.use('/api/users', userRoutes);
+app.use('/api/gadgets',gadgetRoutes);
 
 
 

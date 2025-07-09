@@ -1,26 +1,22 @@
 const Joi = require('joi');
-const userService = require('../services/userService');
+const gadgetService = require('../services/gadgetService');
 const logger = require('../utils/logger');
+const GadgetUtils = require('../utils/gadgetUtils');
 
 class GadgetController {
   static registerSchema = Joi.object({
-    email: Joi.string().email().required(),
-    password: Joi.string().min(6).max(100).required(),
-  });
-
-  static loginSchema = Joi.object({
-    email: Joi.string().email().required(),
-    password: Joi.string().required()
+    name: Joi.string().required()
   });
 
   static updateSchema = Joi.object({
-    email: Joi.string().email()
+    name: Joi.string(),
+    status: Joi.string().valid("Available", "Deployed", "Destroyed", "Decommissioned"),
   });
 
-  async registergadget(req, res, next) {
+  async registerGadget(req, res, next) {
     try {
-      // Validate request body
-      const { error, value } = UserController.registerSchema.validate(req.body);
+      const gadgetName = GadgetUtils.generateGadgetName();
+      const { error, value } = GadgetController.registerSchema.validate({ name: gadgetName });
       if (error) {
         return res.status(400).json({
           success: false,
@@ -32,13 +28,12 @@ class GadgetController {
         });
       }
 
-      const result = await userService.registerUser(value);
-      
-      logger.info(`User registered successfully: ${result.user.email}`);
-      
+      const result = await gadgetService.registerGadget(value);
+      logger.info(`Gadget registered successfully: ${result.name}`);
+
       res.status(201).json({
         success: true,
-        message: 'User registered successfully',
+        message: 'Gadget registered successfully',
         data: result
       });
     } catch (error) {
@@ -46,10 +41,22 @@ class GadgetController {
     }
   }
 
-  async fetchgadget(req, res, next) {
+  async fetchGadgets(req, res, next) {
     try {
-      // Validate request body
-      const { error, value } = UserController.loginSchema.validate(req.body);
+      const gadgets = await gadgetService.fetchAllGadgets();
+      res.json({
+        data:gadgets
+      });
+
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async updateGadget(req, res, next) {
+    try {
+      const { id } = req.params;
+      const { error, value } = GadgetController.updateSchema.validate(req.body);
       if (error) {
         return res.status(400).json({
           success: false,
@@ -61,53 +68,13 @@ class GadgetController {
         });
       }
 
-      const { email, password } = value;
-      const result = await userService.loginUser(email, password);
-      
-      logger.info(`User logged in successfully: ${email}`);
-      
+      const result = await gadgetService.updateGadget(id, value);
+      logger.info(`Gadget updated successfully: ${id}`);
+
       res.json({
         success: true,
-        message: 'Login successful',
+        message: 'Gadget updated successfully',
         data: result
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  async refreshToken(req, res, next) {
-    try {
-      const { refreshToken } = req.body;
-      
-      if (!refreshToken) {
-        return res.status(400).json({
-          success: false,
-          message: 'Refresh token required'
-        });
-      }
-
-      const tokens = await userService.refreshToken(refreshToken);
-      
-      res.json({
-        success: true,
-        message: 'Token refreshed successfully',
-        data: tokens
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  async getProfile(req, res, next) {
-    try {
-      // User is attached to req by auth middleware
-      const user = req.user;
-      
-      res.json({
-        success: true,
-        message: 'Profile retrieved successfully',
-        data: user
       });
     } catch (error) {
       next(error);
@@ -115,4 +82,4 @@ class GadgetController {
   }
 }
 
-module.exports = new UserController();
+module.exports = new GadgetController();
