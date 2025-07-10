@@ -5,9 +5,21 @@ node_modules/
 logs/
 *.log
 
-
 # Environment variables
 .env
 
+# Package lock (optional - include this if you want to track exact versions)
+# package-lock.json
 
-package-lock.json
+# Temporary documentation files (keep the main docs)
+docs/swagger.json
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
