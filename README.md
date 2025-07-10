@@ -44,6 +44,8 @@ See `docs/README.md` for complete documentation usage instructions.
 
 ### Gadget Operations
 - `GET /api/gadgets` - List gadgets (optional status filter)
+- `GET /api/gadgets?status=` - List gadgets (optional status filter)
+- Status : 'Available', 'Deployed', 'Destroyed', 'Decommissioned'
 - `POST /api/gadgets` - Register new gadget
 - `DELETE /api/gadgets` - Decommission gadget
 
