@@ -1,6 +1,6 @@
 # Phoenix-IMF-Gadget-API
 
-API for managing IMF spy gadgets with comprehensive documentation and Postman collections.
+
 
 ## 📚 Documentation
 
@@ -66,5 +66,4 @@ npm run dev  # Start with nodemon
 npm run test-docs  # Test documentation generation
 ```
 
----
-*"Your mission, should you choose to accept it, is to manage IMF gadgets efficiently."*
+
