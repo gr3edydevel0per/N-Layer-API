@@ -2,16 +2,15 @@
 
 const express = require('express');
 const userController = require('../controllers/userController');
-const authMiddleware = require('../middleware/authMiddleware');
-// const { authLimiter, generalLimiter } = require('../middlewares/rateLimiter');
+const {authMiddleware} = require('../middleware/authMiddleware');
+
 
 const router = express.Router();
 
 // Public routes (with auth rate limiting)
 router.post('/register',userController.register);
 router.post('/login',userController.login);
-router.post('/refresh-token',userController.refreshToken);
+router.post('/get-token',authMiddleware,userController.generateToken);
 
 
-router.get('/profile',authMiddleware,userController.getProfile)
 module.exports = router;

@@ -26,7 +26,7 @@ class GadgetUtils {
         return gadgetName
     }
 
-    static generateSuccessProbabilities() {
+    static generateSuccessProbability() {
         return  Math.floor(Math.random() * 100);
     }
 

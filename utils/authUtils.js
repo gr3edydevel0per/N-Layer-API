@@ -1,12 +1,20 @@
+/**
+ * AuthUtils - JWT Utility Class
+ *
+ * Handles secure token extraction, verification, generation (with cryptographically strong nonce),
+ * and error formatting for authentication.
+ */
+
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const config = require('../config/configHandler');
 const logger = require('./logger');
 
 class AuthUtils {
   /**
-   * Extract token from Authorization header
-   * @param {string} authHeader - Authorization header value
-   * @returns {string|null} - Extracted token or null
+   * Extracts token from Authorization header.
+   * @param {string} authHeader - Authorization header value.
+   * @returns {string|null} Extracted token or null if not present.
    */
   static extractTokenFromHeader(authHeader) {
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -16,69 +24,83 @@ class AuthUtils {
   }
 
   /**
-   * Verify JWT token
-   * @param {string} token - JWT token to verify
-   * @returns {Object} - Decoded token payload
-   * @throws {Error} - If token is invalid
+   * Verifies JWT access token.
+   * @param {string} token - JWT token to verify.
+   * @returns {Object} Decoded token payload.
+   * @throws {Error} if token is invalid or expired.
    */
-  static verifyToken(token) {
+  static verifyAccessToken(token) {
     try {
-      return jwt.verify(token, config.jwt.secret);
+      return jwt.verify(token, config.jwt.secret, { algorithms: ['HS256'] });
     } catch (error) {
       logger.error('JWT verification failed:', error);
       throw new Error('Invalid or expired token');
     }
   }
 
+
+
   /**
-   * Generate JWT tokens (access + refresh)
-   * @param {Object} user - User object
-   * @returns {Object} - Object containing access and refresh tokens
+   * Generates cryptographically strong random nonce.
+   * @param {number} length - Length of nonce in bytes.
+   * @returns {string} Random nonce as hex string.
    */
-  static generateTokens(user) {
+  static generateNonce(length = 16) {
+    return crypto.randomBytes(length).toString('hex');
+  }
+
+  /**
+   * Generates a JWT access token with a secure nonce.
+   * @param {Object} user - User object with id and email.
+   * @returns {Object} Object containing accessToken, nonce, and expiry info.
+   */
+  static generateAccessToken(user) {
+    const nonce = AuthUtils.generateNonce();
     const payload = {
       id: user.id,
       email: user.email,
+      nonce,
       iat: Math.floor(Date.now() / 1000)
     };
 
     const accessToken = jwt.sign(payload, config.jwt.secret, {
-      expiresIn: config.jwt.expiresIn
-    });
-
-    const refreshToken = jwt.sign(payload, config.jwt.refreshSecret, {
-      expiresIn: config.jwt.refreshExpiresIn
+      expiresIn: config.jwt.expiresIn,
+      algorithm: 'HS256'
     });
 
     return {
       accessToken,
-      refreshToken,
       expiresIn: config.jwt.expiresIn
     };
   }
 
   /**
-   * Verify refresh token
-   * @param {string} refreshToken - Refresh token to verify
-   * @returns {Object} - Decoded token payload
-   * @throws {Error} - If token is invalid
+   * Generates a JWT API token (using refresh secret) with a secure nonce.
+   * @param {Object} user - User object with id and email.
+   * @returns {Object} Object containing apiToken, nonce, and expiry info.
    */
-  static verifyRefreshToken(refreshToken) {
-    try {
-      return jwt.verify(refreshToken, config.jwt.refreshSecret);
-    } catch (error) {
-      logger.error('Refresh token verification failed:', error);
-      throw new Error('Invalid or expired refresh token');
-    }
+  static generateApiToken(user) {
+    const nonce = AuthUtils.generateNonce();
+    const payload = {
+      id: user.id,
+      email: user.email,
+      nonce,
+      iat: Math.floor(Date.now() / 1000)
+    };
+
+    const apiToken = jwt.sign(payload, config.jwt.refreshSecret, {
+      expiresIn: config.jwt.refreshExpiresIn,
+      algorithm: 'HS256'
+    });
+    const hash = crypto.createHash('sha256').update(apiToken).digest('hex');
+    return hash;
   }
 
-  
-
   /**
-   * Create standardized auth error response
-   * @param {string} message - Error message
-   * @param {number} statusCode - HTTP status code
-   * @returns {Object} - Standardized error response
+   * Creates standardized auth error response.
+   * @param {string} message - Error message.
+   * @param {number} statusCode - HTTP status code.
+   * @returns {Object} Standardized error response.
    */
   static createAuthErrorResponse(message = 'Authentication failed', statusCode = 401) {
     return {

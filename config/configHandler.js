@@ -21,8 +21,8 @@ const config = {
       }
     },
     jwt: {
-      secret: process.env.JWT_SECRET || 'fallback-secret-key',
-      refreshSecret: process.env.JWT_REFRESH_SECRET || 'fallback-refresh-secret',
+      secret: process.env.JWT_ACCESS_TOKEN_SECRET || 'fallback-secret-key',
+      refreshSecret: process.env.JWT_API_TOKEN_SECRET || 'fallback-refresh-secret',
       expiresIn: process.env.JWT_EXPIRE || '1h',
       refreshExpiresIn: process.env.JWT_REFRESH_EXPIRE || '7d'
     },

@@ -1,3 +1,4 @@
+const { where } = require("sequelize");
 const db = require("../config/databaseHandler");
 const logger = require("../utils/logger");
 
@@ -23,15 +24,15 @@ class GadgetRepository {
     }
   }
 
-async findByName(gadgetName) {
-  try {
-    const gadget = await db.Gadget.findOne({ where: { name: gadgetName } });
-    return gadget;
-  } catch (error) {
-    logger.error(`Error finding gadget by name ${gadgetName}:`, error);
-    throw error;
+  async findByName(gadgetName) {
+    try {
+      const gadget = await db.Gadget.findOne({ where: { name: gadgetName } });
+      return gadget;
+    } catch (error) {
+      logger.error(`Error finding gadget by name ${gadgetName}:`, error);
+      throw error;
+    }
   }
-}
 
   async update(id, updateData) {
     try {
@@ -53,22 +54,22 @@ async findByName(gadgetName) {
     }
   }
 
-  async delete(id) {
+  async delete(gadgetName) {
     try {
       const [updatedRowsCount] = await db.Gadget.update(
-        { status: "Decommissioned" },
-        { where: { id } }
+        { status: "Decommissioned", decommissionedAt: new Date() },
+        { where: { name:gadgetName } }
       );
 
       if (updatedRowsCount === 0) {
-        logger.warn(`No gadget found to decommission with ID: ${id}`);
+        logger.warn(`No gadget found to decommission with name: ${gadgetName}`);
         return false;
       }
 
-      logger.info(`Gadget marked as Decommissioned with ID: ${id}`);
+      logger.info(`Gadget marked as Decommissioned with name: ${gadgetName}`);
       return true;
     } catch (error) {
-      logger.error(`Error decommissioning gadget ${id}:`, error);
+      logger.error(`Error decommissioning gadget ${gadgetName}:`, error);
       throw error;
     }
   }
@@ -82,6 +83,19 @@ async findByName(gadgetName) {
       throw error;
     }
   }
+
+  async fetchAllStatus(gadgetStatus) {
+    try {
+      const allGadgets = await db.Gadget.findAll({ where: { status: gadgetStatus } });
+      return allGadgets;
+    }
+    catch (error) {
+      logger.error(`Error fetching all gadgets with status ${gadgetStatus}`, error)
+      throw error
+    }
+  }
+
+
 }
 
 module.exports = new GadgetRepository();
