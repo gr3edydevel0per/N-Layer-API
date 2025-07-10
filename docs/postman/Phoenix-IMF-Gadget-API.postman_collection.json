@@ -1,0 +1,735 @@
+{
+	"info": {
+		"_postman_id": "phoenix-imf-gadget-api",
+		"name": "Phoenix IMF Gadget API",
+		"description": "Complete API collection for the Phoenix IMF Gadget Management System.\n\n## Authentication Flow\n1. **Register** a new user account\n2. **Login** to get JWT access token  \n3. **Get API Token** using JWT to obtain API key for gadget operations\n4. Use API token in `x-api-key` header for all gadget endpoints\n\n## Base URL\n- Development: `http://localhost:3000`\n- Production: `https://api.phoenix-imf.com`\n\n## Security\n- User endpoints use JWT Bearer tokens\n- Gadget endpoints use API key authentication via `x-api-key` header",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "phoenix-imf"
+	},
+	"item": [
+		{
+			"name": "User Management",
+			"item": [
+				{
+					"name": "Register User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const responseJson = pm.response.json();",
+									"    pm.environment.set('user_id', responseJson.user.id);",
+									"    pm.environment.set('user_email', responseJson.user.email);",
+									"    console.log('User registered successfully:', responseJson.user.email);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{agent_email}}\",\n  \"password\": \"{{agent_password}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/users/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"register"
+							]
+						},
+						"description": "Register a new user account with email and password.\n\n**Required Fields:**\n- `email`: Valid email address\n- `password`: Minimum 6 characters, maximum 100 characters\n\n**Response:**\n- Returns user ID and email on success\n- Returns validation errors if input is invalid"
+					},
+					"response": [
+						{
+							"name": "Success - User Registered",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"agent@imf.com\",\n  \"password\": \"secret123\"\n}"
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/users/register",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"users",
+										"register"
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"message\": \"User registered successfully\",\n  \"user\": {\n    \"id\": 1,\n    \"email\": \"agent@imf.com\"\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Login User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const responseJson = pm.response.json();",
+									"    pm.environment.set('access_token', responseJson.accessToken);",
+									"    pm.environment.set('user_id', responseJson.user.id);",
+									"    console.log('Login successful, access token saved');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{agent_email}}\",\n  \"password\": \"{{agent_password}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/users/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"login"
+							]
+						},
+						"description": "Authenticate user and receive JWT access token.\n\n**Required Fields:**\n- `email`: Registered user email\n- `password`: User password\n\n**Response:**\n- Returns JWT access token for authenticated requests\n- Token expires in 1 hour by default\n- Use this token to generate API key for gadget operations"
+					},
+					"response": [
+						{
+							"name": "Success - Login",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"agent@imf.com\",\n  \"password\": \"secret123\"\n}"
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/users/login",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"users",
+										"login"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"message\": \"Login successful\",\n  \"user\": {\n    \"id\": 1,\n    \"email\": \"agent@imf.com\"\n  },\n  \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n  \"expiresIn\": \"1h\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Get API Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const responseJson = pm.response.json();",
+									"    if (responseJson['Api Token'] && !responseJson['Api Token'].includes('already been generated')) {",
+									"        pm.environment.set('api_token', responseJson['Api Token']);",
+									"        console.log('API token generated and saved');",
+									"    } else {",
+									"        console.log('API token already exists for this user');",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/users/get-token",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"get-token"
+							]
+						},
+						"description": "Generate API token for accessing gadget endpoints. Requires valid JWT token from login.\n\n**Authentication:** Bearer token (JWT) required in Authorization header\n\n**Response:**\n- Returns API token for gadget operations\n- API token is permanent until manually regenerated\n- Use this token in `x-api-key` header for gadget endpoints"
+					},
+					"response": [
+						{
+							"name": "Success - API Token Generated",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+									}
+								],
+								"url": {
+									"raw": "http://localhost:3000/api/users/get-token",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"users",
+										"get-token"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"Api Token\": \"api_token_xyz123abc456\"\n}"
+						}
+					]
+				}
+			],
+			"description": "User authentication and API token management endpoints.\n\n**Authentication Flow:**\n1. Register new user account\n2. Login to get JWT access token\n3. Use JWT token to generate API key for gadget operations"
+		},
+		{
+			"name": "Gadget Management",
+			"item": [
+				{
+					"name": "Get All Gadgets",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const responseJson = pm.response.json();",
+									"    console.log('Found', responseJson.data.length, 'gadgets');",
+									"    if (responseJson.data.length > 0) {",
+									"        pm.environment.set('sample_gadget_name', responseJson.data[0].name);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-api-key",
+								"value": "{{api_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/gadgets",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"gadgets"
+							]
+						},
+						"description": "Retrieve all gadgets in the system.\n\n**Authentication:** API token required in `x-api-key` header\n\n**Response:**\n- Returns array of all gadgets with their details\n- Each gadget includes ID, name, status, and timestamps"
+					},
+					"response": [
+						{
+							"name": "Success - All Gadgets",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "x-api-key",
+										"value": "api_token_xyz123abc456"
+									}
+								],
+								"url": {
+									"raw": "http://localhost:3000/api/gadgets",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"gadgets"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"success\": true,\n  \"data\": [\n    {\n      \"id\": 1,\n      \"name\": \"Invisibility Cloak MK-7\",\n      \"status\": \"Available\",\n      \"created_at\": \"2023-07-10T10:30:00.000Z\",\n      \"updated_at\": \"2023-07-10T10:30:00.000Z\"\n    }\n  ]\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Gadgets by Status",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-api-key",
+								"value": "{{api_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/gadgets?status=Available",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"gadgets"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "Available",
+									"description": "Filter by status: Available, Deployed, Destroyed, Decommissioned"
+								}
+							]
+						},
+						"description": "Retrieve gadgets filtered by their current status.\n\n**Authentication:** API token required in `x-api-key` header\n\n**Query Parameters:**\n- `status`: One of Available, Deployed, Destroyed, Decommissioned\n\n**Response:**\n- Returns array of gadgets matching the specified status"
+					},
+					"response": [
+						{
+							"name": "Success - Available Gadgets",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "x-api-key",
+										"value": "api_token_xyz123abc456"
+									}
+								],
+								"url": {
+									"raw": "http://localhost:3000/api/gadgets?status=Available",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"gadgets"
+									],
+									"query": [
+										{
+											"key": "status",
+											"value": "Available"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"success\": true,\n  \"data\": [\n    {\n      \"id\": 1,\n      \"name\": \"Invisibility Cloak MK-7\",\n      \"status\": \"Available\",\n      \"created_at\": \"2023-07-10T10:30:00.000Z\",\n      \"updated_at\": \"2023-07-10T10:30:00.000Z\"\n    }\n  ]\n}"
+						}
+					]
+				},
+				{
+					"name": "Register New Gadget",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const responseJson = pm.response.json();",
+									"    pm.environment.set('new_gadget_name', responseJson.data.name);",
+									"    console.log('Gadget registered:', responseJson.data.name);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "x-api-key",
+								"value": "{{api_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/gadgets",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"gadgets"
+							]
+						},
+						"description": "Register a new gadget with an automatically generated unique name.\n\n**Authentication:** API token required in `x-api-key` header\n\n**Request Body:** Empty object `{}` (name is auto-generated)\n\n**Response:**\n- Returns the newly created gadget with auto-generated name\n- Default status is 'Available'"
+					},
+					"response": [
+						{
+							"name": "Success - Gadget Registered",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "x-api-key",
+										"value": "api_token_xyz123abc456"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{}"
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/gadgets",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"gadgets"
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Gadget registered successfully\",\n  \"data\": {\n    \"id\": 2,\n    \"name\": \"Quantum Decoder Ring X12\",\n    \"status\": \"Available\",\n    \"created_at\": \"2023-07-10T11:00:00.000Z\",\n    \"updated_at\": \"2023-07-10T11:00:00.000Z\"\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Decommission Gadget",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "x-api-key",
+								"value": "{{api_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"{{sample_gadget_name}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/gadgets",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"gadgets"
+							]
+						},
+						"description": "Decommission (soft-delete) a gadget by changing its status to 'Decommissioned'.\n\n**Authentication:** API token required in `x-api-key` header\n\n**Request Body:**\n- `name`: Exact name of the gadget to decommission\n\n**Response:**\n- Confirms whether gadget was found and decommissioned\n- Returns success message with gadget name"
+					},
+					"response": [
+						{
+							"name": "Success - Gadget Decommissioned",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "x-api-key",
+										"value": "api_token_xyz123abc456"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"name\": \"Invisibility Cloak MK-7\"\n}"
+								},
+								"url": {
+									"raw": "http://localhost:3000/api/gadgets",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										"api",
+										"gadgets"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Gadget 'Invisibility Cloak MK-7' decommissioned successfully.\",\n  \"decommissioned\": true\n}"
+						}
+					]
+				}
+			],
+			"description": "Gadget management operations for the IMF spy equipment inventory.\n\n**Authentication:** All gadget endpoints require API token in `x-api-key` header.\n\n**Available Operations:**\n- List all gadgets or filter by status\n- Register new gadgets with auto-generated names\n- Decommission gadgets (soft delete)",
+			"auth": {
+				"type": "apikey",
+				"apikey": [
+					{
+						"key": "key",
+						"value": "x-api-key",
+						"type": "string"
+					},
+					{
+						"key": "value",
+						"value": "{{api_token}}",
+						"type": "string"
+					}
+				]
+			}
+		},
+		{
+			"name": "API Information",
+			"item": [
+				{
+					"name": "Get API Info",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								""
+							]
+						},
+						"description": "Get basic API information including version, available endpoints, and documentation links."
+					},
+					"response": [
+						{
+							"name": "API Information",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:3000/",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "3000",
+									"path": [
+										""
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"success\": true,\n  \"message\": \"Phoenix : IMF Gadget API API\",\n  \"version\": \"1.0.0\",\n  \"documentation\": \"/api/docs\",\n  \"openapi_spec\": \"/api/docs.json\",\n  \"login\": \"/api/login\"\n}"
+						}
+					]
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Pre-request script for Phoenix IMF Gadget API",
+					"// This runs before every request in the collection",
+					"",
+					"// Log the current request",
+					"console.log('Making request to:', pm.request.url.toString());"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Global test script for Phoenix IMF Gadget API",
+					"// This runs after every request in the collection",
+					"",
+					"// Log response status",
+					"console.log('Response status:', pm.response.code, pm.response.status);",
+					"",
+					"// Check for common error responses",
+					"if (pm.response.code >= 400) {",
+					"    const responseBody = pm.response.json();",
+					"    console.error('Error response:', responseBody);",
+					"    ",
+					"    // Check for authentication errors",
+					"    if (pm.response.code === 401) {",
+					"        console.warn('Authentication required. Please check your tokens.');",
+					"    }",
+					"    ",
+					"    if (pm.response.code === 403) {",
+					"        console.warn('Forbidden. Please check your API token.');",
+					"    }",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "agent_email",
+			"value": "agent@imf.com",
+			"type": "string"
+		},
+		{
+			"key": "agent_password",
+			"value": "secret123",
+			"type": "string"
+		}
+	]
+}
