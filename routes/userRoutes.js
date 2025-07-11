@@ -65,6 +65,17 @@ const router = express.Router();
  *               $ref: '#/components/schemas/Error'
  *       409:
  *         description: User already exists
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: User already exists with this email
  */
 router.post('/register',userController.register);
 
@@ -125,12 +136,23 @@ router.post('/register',userController.register);
  *               $ref: '#/components/schemas/Error'
  *       401:
  *         description: Invalid credentials
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Invalid credentials
  */
 router.post('/login',userController.login);
 
 /**
  * @swagger
- * /api/users/get-token:
+ * /api/users/generate-token:
  *   post:
  *     summary: Generate API token for gadget operations
  *     tags: [Users]
@@ -144,7 +166,7 @@ router.post('/login',userController.login);
  *             schema:
  *               type: object
  *               properties:
- *                 Api Token:
+ *                 apiToken:
  *                   type: string
  *                   example: api_token_xyz123abc456
  *       401:
@@ -156,10 +178,13 @@ router.post('/login',userController.login);
  *             schema:
  *               type: object
  *               properties:
- *                 Api Token:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
  *                   type: string
  *                   example: An API token has already been generated for this user. Please read the documentation if you need to regenerate it.
  */
-router.post('/get-token',authMiddleware,userController.generateToken);
+router.post('/generate-token',authMiddleware,userController.generateToken);
 
 module.exports = router;

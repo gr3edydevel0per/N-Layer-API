@@ -54,6 +54,12 @@ class UserController {
         },
       });
     } catch (err) {
+      if (err.message === 'User already exists with this email') {
+        return res.status(409).json({
+          success: false,
+          message: err.message,
+        });
+      }
       next(err);
     }
   }
@@ -87,6 +93,12 @@ class UserController {
         expiresIn: result.expiresIn,
       });
     } catch (err) {
+      if (err.message === 'Invalid credentials') {
+        return res.status(401).json({
+          success: false,
+          message: err.message,
+        });
+      }
       next(err);
     }
   }
@@ -101,13 +113,14 @@ class UserController {
       const { id, email } = req.user;
       const user = await userService.fetchUser(id);
 
-      let apiToken;
-      if (!user.api_token) {
-        apiToken = await userService.generateApiToken({ id, email });
-      } else {
-        apiToken = 'An API token has already been generated for this user. Please read the documentation if you need to regenerate it.';
+      if (user.api_token) {
+        return res.status(409).json({
+          success: false,
+          message: 'An API token has already been generated for this user. Please read the documentation if you need to regenerate it.',
+        });
       }
 
+      const apiToken = await userService.generateApiToken({ id, email });
       res.json({ apiToken });
     } catch (err) {
       next(err);
