@@ -6,10 +6,10 @@ const options = {
     info: {
       title: 'Phoenix IMF Gadget API',
       version: '1.0.0',
-      description: 'API for managing IMF spy gadgets with user authentication and token-based access control.',
+      description: 'API for managing IMF  gadgets with user authentication and token-based access control.',
       contact: {
         name: 'Phoenix IMF Team',
-        email: 'support@phoenix-imf.com'
+        email: 'realkanavarora@gmail.com'
       },
       license: {
         name: 'MIT',
