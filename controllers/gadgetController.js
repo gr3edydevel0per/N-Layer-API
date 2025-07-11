@@ -62,6 +62,12 @@ class GadgetController {
         data: result,
       });
     } catch (err) {
+      if (err.message === 'Gadget already exists with this name') {
+        return res.status(409).json({
+          success: false,
+          message: err.message,
+        });
+      }
       next(err);
     }
   }
@@ -106,11 +112,17 @@ class GadgetController {
 
       const decommissioned = await gadgetService.delete(value);
       logger.info(`Gadget decommissioned: ${value.name}`);
+      
+      if (!decommissioned) {
+        return res.status(404).json({
+          success: false,
+          message: `No gadget found with the name '${value.name}'.`,
+        });
+      }
+
       res.json({
         success: true,
-        message: decommissioned
-          ? `Gadget '${value.name}' decommissioned successfully.`
-          : `No gadget found with the name '${value.name}'.`,
+        message: `Gadget '${value.name}' decommissioned successfully.`,
         decommissioned,
       });
     } catch (err) {
@@ -141,12 +153,18 @@ class GadgetController {
 
       const updated = await gadgetService.patch(value);
       logger.info(`Gadget updated: ${value.id}`);
+      
+      if (!updated) {
+        return res.status(404).json({
+          success: false,
+          message: `No gadget found with id '${value.id}'.`,
+        });
+      }
+
       res.json({
-        success: !!updated,
-        message: updated
-          ? `Gadget '${value.id}' updated successfully.`
-          : `No gadget found with id '${value.id}'.`,
-        data: updated || null,
+        success: true,
+        message: `Gadget '${value.id}' updated successfully.`,
+        data: updated,
       });
     } catch (err) {
       next(err);

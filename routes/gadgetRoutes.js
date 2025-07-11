@@ -86,6 +86,19 @@ router.get('/', gadgetController.fetchGadgets);
  *         description: Unauthorized - API token required
  *       403:
  *         description: Forbidden - Invalid API token
+ *       409:
+ *         description: Gadget already exists
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Gadget already exists with this name
  *       500:
  *         description: Internal server error
  */
@@ -141,6 +154,17 @@ router.post('/', gadgetController.registerGadget);
  *         description: Forbidden - Invalid API token
  *       404:
  *         description: Gadget not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: No gadget found with the name 'Invisibility Cloak MK-7'.
  */
 router.delete('/', gadgetController.deleteGadget);
 
@@ -199,6 +223,17 @@ router.delete('/', gadgetController.deleteGadget);
  *         description: Forbidden - Invalid API token
  *       404:
  *         description: Gadget not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: No gadget found with id '123'.
  */
 router.patch('/', gadgetController.patchGadget);
 
@@ -246,8 +281,32 @@ router.patch('/', gadgetController.patchGadget);
  *         description: Forbidden - Invalid API token
  *       404:
  *         description: Gadget not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: 'No gadget found with ID: 123.'
  *       409:
  *         description: Gadget already destroyed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Gadget is already destroyed
+ *                 data:
+ *                   $ref: '#/components/schemas/Gadget'
  */
 router.post('/:id/self-destruct', gadgetController.selfDestructGadget);
 
