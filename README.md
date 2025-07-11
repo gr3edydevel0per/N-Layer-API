@@ -2,7 +2,7 @@
 
 ## Control Flow
 
-
+<img src="https://raw.githubusercontent.com/gr3edydevel0per/Phoenix-IMF-Gadget-API/refs/heads/master/Assets/controlFlow.png" >
 ## 📚 Documentation
 
 This API includes complete documentation in multiple formats:
