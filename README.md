@@ -74,4 +74,4 @@ npm run test-docs  # Test documentation generation
 
 ## TO-DO
 - Implmenting rate limiting
-- Token regenration
+- Token regeneration
