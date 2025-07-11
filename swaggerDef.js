@@ -22,7 +22,7 @@ const options = {
         description: 'Development server'
       },
       {
-        url: 'https://api.phoenix-imf.com',
+        url: 'https://phoenix-imf-gadget-api-ly5p.onrender.com/',
         description: 'Production server'
       }
     ],
