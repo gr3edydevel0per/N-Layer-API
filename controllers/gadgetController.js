@@ -1,51 +1,68 @@
+/**
+ * GadgetController
+ * Handles all gadget-related API endpoints: validation, delegation to business logic, and logging.
+ *
+ * Endpoints:
+ *   - POST   /api/gadgets/register : Register a new gadget (unique name generated).
+ *   - GET    /api/gadgets         : Fetch gadgets, optionally filtered by status.
+ *   - DELETE /api/gadgets         : Decommission (soft-delete) a gadget by name.
+ *   - PATCH  /api/gadgets         : Update gadget properties (name, status).
+ *   - POST   /api/gadgets/:id/self-destruct : Trigger self-destruct for a gadget.
+ *
+ * Validation: Joi
+ * Logging: Winston
+ * Error Handling: Centralized via middleware.
+ */
+
 const Joi = require('joi');
 const gadgetService = require('../services/gadgetService');
 const logger = require('../utils/logger');
 const GadgetUtils = require('../utils/gadgetUtils');
 
 class GadgetController {
-  // JOI Schemas for validation
+  // Joi schemas for validation
   static fetchSchema = Joi.object({
-    status: Joi.string().valid("Available", "Deployed", "Destroyed", "Decommissioned").optional()
+    status: Joi.string().valid('Available', 'Deployed', 'Destroyed', 'Decommissioned').optional(),
   });
 
   static registerSchema = Joi.object({
-    name: Joi.string().required()
+    name: Joi.string().required(),
   });
 
   static deleteSchema = Joi.object({
-    name: Joi.string().required()
+    name: Joi.string().required(),
+  });
+
+  static patchSchema = Joi.object({
+    id: Joi.string().required(),
+    name: Joi.string().optional(),
+    status: Joi.string().valid('Available', 'Deployed', 'Destroyed', 'Decommissioned').optional(),
   });
 
   /**
-   * Register a new gadget with a generated unique name.
+   * Register a new gadget (unique name generated).
    * @route POST /api/gadgets/register
    */
   async registerGadget(req, res, next) {
     try {
-      const gadgetName = GadgetUtils.generateGadgetName();
-      const { error, value } = GadgetController.registerSchema.validate({ name: gadgetName });
-      if (error) {
+      const name = GadgetUtils.generateGadgetName();
+      const { error, value } = GadgetController.registerSchema.validate({ name });
+      if (error)
         return res.status(400).json({
           success: false,
           message: 'Validation error',
-          details: error.details.map(detail => ({
-            field: detail.path[0],
-            message: detail.message
-          }))
+          details: error.details.map(({ path, message }) => ({ field: path[0], message })),
         });
-      }
 
       const result = await gadgetService.registerGadget(value);
-      logger.info(`Gadget registered successfully: ${result.name}`);
-
+      logger.info(`Gadget registered: ${result.name}`);
       res.status(201).json({
         success: true,
         message: 'Gadget registered successfully',
-        data: result
+        data: result,
       });
-    } catch (error) {
-      next(error);
+    } catch (err) {
+      next(err);
     }
   }
 
@@ -56,31 +73,20 @@ class GadgetController {
   async fetchGadgets(req, res, next) {
     try {
       const { error, value } = GadgetController.fetchSchema.validate(req.query);
-      if (error) {
-        logger.warn(`Gadget fetch validation failed: ${error.details[0].message}`);
+      if (error)
         return res.status(400).json({
           success: false,
           message: 'Validation error',
-          details: error.details.map(detail => ({
-            field: detail.path[0],
-            message: detail.message
-          }))
+          details: error.details.map(({ path, message }) => ({ field: path[0], message })),
         });
-      }
 
-      let gadgets;
-      if (value.status) {
-        gadgets = await gadgetService.fetchAllWithStatus(value.status);
-      } else {
-        gadgets = await gadgetService.fetchAllGadgets();
-      }
+      const gadgets = value.status
+        ? await gadgetService.fetchAllWithStatus(value.status)
+        : await gadgetService.fetchAllGadgets();
 
-      res.json({
-        success: true,
-        data: gadgets
-      });
-    } catch (error) {
-      next(error);
+      res.json({ success: true, data: gadgets });
+    } catch (err) {
+      next(err);
     }
   }
 
@@ -91,29 +97,100 @@ class GadgetController {
   async deleteGadget(req, res, next) {
     try {
       const { error, value } = GadgetController.deleteSchema.validate(req.body);
-      if (error) {
-        logger.warn(`Gadget delete validation failed: ${error.details[0].message}`);
+      if (error)
         return res.status(400).json({
           success: false,
           message: 'Validation error',
-          details: error.details.map(detail => ({
-            field: detail.path[0],
-            message: detail.message
-          }))
+          details: error.details.map(({ path, message }) => ({ field: path[0], message })),
         });
-      }
 
-      const decommissioned = await gadgetService.delete(value.name);
+      const decommissioned = await gadgetService.delete(value);
       logger.info(`Gadget decommissioned: ${value.name}`);
       res.json({
         success: true,
         message: decommissioned
           ? `Gadget '${value.name}' decommissioned successfully.`
           : `No gadget found with the name '${value.name}'.`,
-        decommissioned
+        decommissioned,
       });
-    } catch (error) {
-      next(error);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * Update gadget properties (name, status) by id.
+   * @route PATCH /api/gadgets
+   */
+  async patchGadget(req, res, next) {
+    try {
+      const { error, value } = GadgetController.patchSchema.validate(req.body);
+      if (error)
+        return res.status(400).json({
+          success: false,
+          message: 'Validation error',
+          details: error.details.map(({ path, message }) => ({ field: path[0], message })),
+        });
+
+      if (!value.name && !value.status)
+        return res.status(400).json({
+          success: false,
+          message: 'No data provided for update. At least one of "name" or "status" must be specified.',
+          details: [],
+        });
+
+      const updated = await gadgetService.patch(value);
+      logger.info(`Gadget updated: ${value.id}`);
+      res.json({
+        success: !!updated,
+        message: updated
+          ? `Gadget '${value.id}' updated successfully.`
+          : `No gadget found with id '${value.id}'.`,
+        data: updated || null,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * Trigger self-destruct sequence for a gadget.
+   * @route POST /api/gadgets/:id/self-destruct
+   */
+  async selfDestructGadget(req, res, next) {
+    try {
+      const { error, value } = Joi.object({ id: Joi.string().required() }).validate(req.params);
+      if (error)
+        return res.status(400).json({
+          success: false,
+          message: 'Validation error',
+          details: error.details.map(({ path, message }) => ({ field: path[0], message })),
+        });
+
+      const confirmationCode = GadgetUtils.generateConfirmationCode();
+      const result = await gadgetService.selfDestruct(value.id, confirmationCode);
+
+      if (result && result.message === 'Gadget is already destroyed')
+        return res.status(409).json({
+          success: false,
+          message: result.message,
+          data: result.gadget,
+        });
+
+      if (!result)
+        return res.status(404).json({
+          success: false,
+          message: `No gadget found with ID: ${value.id}.`,
+        });
+
+      logger.info(`Self-destruct triggered for gadget ID: ${value.id}`);
+      res.status(200).json({
+        success: true,
+        message: `Self-destruct sequence initiated for Gadget ID: ${value.id}.`,
+        confirmationCode,
+      });
+    } catch (err) {
+      next(err);
     }
   }
 }

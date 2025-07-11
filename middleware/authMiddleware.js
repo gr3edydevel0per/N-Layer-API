@@ -50,8 +50,8 @@ const authMiddleware = async (req, res, next) => {
 
 /**
  * Middleware to validate long-lived API tokens.
- * - Extracts the Bearer token from the Authorization header.
- * - Compares the hash of the first 8 chars of the token to all stored API token hashes in the DB.
+ * - Extracts the API token from the x-api-key header.
+ * - Compares the hash of the token to all stored API token hashes in the DB.
  * - Attaches the matching user to req.user on success.
  * - Sends a 401 on invalid token, 500 on other errors.
  *
@@ -61,8 +61,11 @@ const authMiddleware = async (req, res, next) => {
  */
 const apiTokenValidator = async (req, res, next) => {
   try {
-    // 1. Extract the token from header
-    const token = AuthUtils.extractTokenFromHeader(req.headers.authorization);
+    // 1. Extract the token from the x-api-key header (case-insensitive)
+    const token =
+      req.headers['x-api-key'] ||
+      req.headers['X-API-KEY'] || // Not necessary in Node, but included for clarity
+      req.headers['x-api-key'.toLowerCase()];
 
     if (!token) {
       const error = AuthUtils.createAuthErrorResponse('API token required');
@@ -74,6 +77,8 @@ const apiTokenValidator = async (req, res, next) => {
     let matchedUser = null;
     for (const user of usersWithApiTokens) {
       if (user.api_token) {
+        // If you only want to compare the first 8 chars, hash and compare accordingly
+        // Otherwise, compare the whole token
         const isMatch = await bcrypt.compare(token, user.api_token);
         if (isMatch) {
           matchedUser = user;
@@ -99,7 +104,6 @@ const apiTokenValidator = async (req, res, next) => {
     return res.status(errorResponse.statusCode).json(errorResponse.response);
   }
 };
-
 module.exports = {
   authMiddleware,
   apiTokenValidator,

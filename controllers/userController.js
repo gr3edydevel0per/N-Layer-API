@@ -1,10 +1,24 @@
+/**
+ * UserController
+ * Handles user-related API endpoints: registration, authentication, and API token management.
+ *
+ * Endpoints:
+ *   - POST   /api/users/register      : Register a new user.
+ *   - POST   /api/users/login        : Login and return JWT access token.
+ *   - POST   /api/users/generate-token : Generate/retrieve user's API token (authentication required).
+ *
+ * Validation: Joi
+ * Logging: Winston
+ * Error Handling: Centralized via middleware.
+ */
+
 const Joi = require('joi');
 const userService = require('../services/userService');
 const logger = require('../utils/logger');
 const AuthUtils = require('../utils/authUtils');
 
 class UserController {
-  // JOI Schemas
+  // Joi schemas for request validation
   static registerSchema = Joi.object({
     email: Joi.string().email().required(),
     password: Joi.string().min(6).max(100).required(),
@@ -12,7 +26,7 @@ class UserController {
 
   static loginSchema = Joi.object({
     email: Joi.string().email().required(),
-    password: Joi.string().required()
+    password: Joi.string().required(),
   });
 
   /**
@@ -22,29 +36,25 @@ class UserController {
   async register(req, res, next) {
     try {
       const { error, value } = UserController.registerSchema.validate(req.body);
-      if (error) {
+      if (error)
         return res.status(400).json({
           success: false,
           message: 'Validation error',
-          details: error.details.map(detail => ({
-            field: detail.path[0],
-            message: detail.message
-          }))
+          details: error.details.map(({ path, message }) => ({ field: path[0], message })),
         });
-      }
 
       const result = await userService.registerUser(value);
-      logger.info(`User registered successfully: ${result.user.email}`);
+      logger.info(`User registered: ${result.user.email}`);
 
       res.status(201).json({
         message: 'User registered successfully',
         user: {
           id: result.user.id,
-          email: result.user.email
-        }
+          email: result.user.email,
+        },
       });
-    } catch (error) {
-      next(error);
+    } catch (err) {
+      next(err);
     }
   }
 
@@ -55,21 +65,17 @@ class UserController {
   async login(req, res, next) {
     try {
       const { error, value } = UserController.loginSchema.validate(req.body);
-      if (error) {
+      if (error)
         return res.status(400).json({
           success: false,
           message: 'Validation error',
-          details: error.details.map(detail => ({
-            field: detail.path[0],
-            message: detail.message
-          }))
+          details: error.details.map(({ path, message }) => ({ field: path[0], message })),
         });
-      }
 
       const { email, password } = value;
       const result = await userService.loginUser(email, password);
 
-      logger.info(`User logged in successfully: ${email}`);
+      logger.info(`User logged in: ${email}`);
 
       res.json({
         message: 'Login successful',
@@ -78,37 +84,33 @@ class UserController {
           email: result.user.email,
         },
         accessToken: result.accessToken,
-        expiresIn: result.expiresIn
+        expiresIn: result.expiresIn,
       });
-    } catch (error) {
-      next(error);
+    } catch (err) {
+      next(err);
     }
   }
 
   /**
-   * Generate and return user's API token. User must be authenticated.
+   * Generate/retrieve user's API token. User must be authenticated.
    * @route POST /api/users/generate-token
    */
   async generateToken(req, res, next) {
     try {
       // req.user is set by authentication middleware
-      const profileData = { id: req.user.id, email: req.user.email };
-      const user = await userService.fetchUser(profileData.id);
+      const { id, email } = req.user;
+      const user = await userService.fetchUser(id);
 
       let apiToken;
       if (!user.api_token) {
-        // Generate and save if not present
-        apiToken = await userService.generateApiToken(profileData);
+        apiToken = await userService.generateApiToken({ id, email });
       } else {
-        // If api_token already exists, you could choose to return it or enforce re-generation
-        apiToken = "An API token has already been generated for this user. Please read the documentation if you need to regenerate it.";
+        apiToken = 'An API token has already been generated for this user. Please read the documentation if you need to regenerate it.';
       }
 
-      res.json({
-        "Api Token" : apiToken,
-      });
-    } catch (error) {
-      next(error);
+      res.json({ apiToken });
+    } catch (err) {
+      next(err);
     }
   }
 }

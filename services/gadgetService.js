@@ -1,113 +1,103 @@
-const jwt = require('jsonwebtoken');
-const userRepository = require('../repositories/userRepository');
-const config = require('../config/configHandler');
+/**
+ * GadgetService
+ * Handles business logic for gadget management: registration, inventory queries,
+ * status updates, decommission, and self-destruct.
+ */
+
 const logger = require('../utils/logger');
 const gadgetRepository = require('../repositories/gadgetRepository');
-const { deleteGadget } = require('../controllers/gadgetController');
 
 class GadgetService {
+  /**
+   * Register a new gadget if it doesn't already exist.
+   * @param {Object} gadgetData
+   * @returns {Object} Newly created gadget
+   */
   async registerGadget(gadgetData) {
     try {
-      // Check if gadget already exists
       const existingGadget = await gadgetRepository.findByName(gadgetData.name);
-      if (existingGadget) {
-        throw new Error('gadget already exists with this name');
-      }
-
-      // Create new gadget
-      const gadget = await gadgetRepository.create(gadgetData);
-
-      return {
-        gadget
-      };
+      if (existingGadget) throw new Error('Gadget already exists with this name');
+      return await gadgetRepository.create(gadgetData);
     } catch (error) {
       logger.error('Error registering gadget:', error);
       throw error;
     }
   }
 
-  async fetchAllGadgets(){
- try {
-      // Check if gadget already exists
-      const gadgets = await gadgetRepository.fetchAll()
-      if (gadgets.length===0) {
-        return 'inventory is empty';
-      }
-      return {
-        gadgets
-      };
-    } catch (error) {
-      logger.error('Error getting gadgets:', error);
-      throw error;
-    }
-  }
-
-
-  async fetchAllWithStatus(status){
- try {
-      // Check if gadget already exists
-      const gadgets = await gadgetRepository.fetchAllStatus(status)
-      if (gadgets.length===0) {
-        return 'No Gadget with such status';
-      }
-      return {
-        gadgets
-      };
-    } catch (error) {
-      logger.error('Error getting gadgets:', error);
-      throw error;
-    }
-  }
-
-
-  async delete(gadgetData){
-    try{
-      const decommissionGadget = await gadgetRepository.delete(gadgetData.name)
-      return decommissionGadget;
-    }
-    catch(error){
-      logger.error('Error deleting gadget',error);
-      throw error
-    }
-
-  }
-
-
-
-  generateTokens(gadget) {
-    const payload = {
-      id: gadget.id,
-      email: gadget.email
-    };
-
-    const accessToken = jwt.sign(payload, config.jwt.secret, {
-      expiresIn: config.jwt.expiresIn
-    });
-
-    const api_token = jwt.sign(payload, config.jwt.refreshSecret, {
-      expiresIn: config.jwt.refreshExpiresIn
-    });
-
-    return {
-      accessToken,
-      api_token
-    };
-  }
-
-  async refreshToken(refreshToken) {
+  /**
+   * Fetch all gadgets from the inventory.
+   * @returns {Array|String} Array of gadgets or inventory message
+   */
+  async fetchAllGadgets() {
     try {
-      const decoded = jwt.verify(refreshToken, config.jwt.refreshSecret);
-      const gadget = await userRepository.findById(decoded.id);
-      
-      if (!gadget || !gadget.isActive) {
-        throw new Error('Invalid refresh token');
-      }
-
-      const tokens = this.generateTokens(gadget);
-      return tokens;
+      const gadgets = await gadgetRepository.fetchAll();
+      return gadgets && gadgets.length ? gadgets : 'Inventory is empty';
     } catch (error) {
-      logger.error('Error refreshing token:', error);
-      throw new Error('Invalid refresh token');
+      logger.error('Error getting gadgets:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Fetch all gadgets filtered by status.
+   * @param {String} status
+   * @returns {Array|String} Array of gadgets or status message
+   */
+  async fetchAllWithStatus(status) {
+    try {
+      const gadgets = await gadgetRepository.fetchAllStatus(status);
+      return gadgets && gadgets.length ? gadgets : 'No gadget with such status';
+    } catch (error) {
+      logger.error('Error getting gadgets:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Decommission (soft-delete) a gadget by name.
+   * @param {Object} gadgetData
+   * @returns {Boolean} Decommission status
+   */
+  async delete(gadgetData) {
+    try {
+      return await gadgetRepository.delete(gadgetData.name);
+    } catch (error) {
+      logger.error('Error deleting gadget:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Patch gadget properties.
+   * @param {Object} gadgetData
+   * @returns {Object|null} Updated gadget or null
+   */
+  async patch(gadgetData) {
+    try {
+      return await gadgetRepository.patch(gadgetData);
+    } catch (error) {
+      logger.error('Error updating gadget:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Trigger self-destruct sequence for a gadget.
+   * @param {String} id
+   * @param {String} confirmationCode
+   * @returns {Object|null} Updated gadget with confirmation code
+   */
+  async selfDestruct(id, confirmationCode) {
+    try {
+      const updatedGadget = await gadgetRepository.updateStatus(id, 'Destroyed');
+      if (!updatedGadget) {
+        logger.warn(`No gadget found to self-destruct with ID: ${id}`);
+        return null;
+      }
+      return { ...updatedGadget, confirmationCode };
+    } catch (error) {
+      logger.error('Error triggering self-destruct:', error);
+      throw error;
     }
   }
 }
