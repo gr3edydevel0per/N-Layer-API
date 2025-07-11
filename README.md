@@ -47,8 +47,9 @@ See `docs/README.md` for complete documentation usage instructions.
 - `GET /api/gadgets?status=` - List gadgets (optional status filter)
 - Status : 'Available', 'Deployed', 'Destroyed', 'Decommissioned'
 - `POST /api/gadgets` - Register new gadget
+- `PATCH /api/gadgets` - Updates the existing gadget
 - `DELETE /api/gadgets` - Decommission gadget
-
+- `POST /api/gadgets/:id/self-destruct` - Initiates self destruct for a gadegt
 ## 🔐 Authentication
 
 1. **Register/Login** → Get JWT access token
