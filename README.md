@@ -1,6 +1,6 @@
 # Phoenix-IMF-Gadget-API
 
-API for managing IMF spy gadgets with comprehensive documentation and Postman collections.
+
 
 ## 📚 Documentation
 
@@ -44,6 +44,8 @@ See `docs/README.md` for complete documentation usage instructions.
 
 ### Gadget Operations
 - `GET /api/gadgets` - List gadgets (optional status filter)
+- `GET /api/gadgets?status=` - List gadgets (optional status filter)
+- Status : 'Available', 'Deployed', 'Destroyed', 'Decommissioned'
 - `POST /api/gadgets` - Register new gadget
 - `DELETE /api/gadgets` - Decommission gadget
 
@@ -66,5 +68,4 @@ npm run dev  # Start with nodemon
 npm run test-docs  # Test documentation generation
 ```
 
----
-*"Your mission, should you choose to accept it, is to manage IMF gadgets efficiently."*
+
